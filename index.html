@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>X-CRASH | Multiplier Game & 55+ Payments</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #131b2e;
+      --card-2: #1a243d;
+      --border: #253352;
+      --primary: #3b82f6;
+      --green: #00e676;
+      --gold: #ffca28;
+      --red: #ff3b5c;
+      --text: #f1f5f9;
+      --muted: #8b9bb4;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+    header {
+      background: #0e1422;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .logo { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
+    .logo span { color: var(--red); }
+
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .balance-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      color: var(--green);
+      font-size: 14px;
+    }
+    .btn-dep {
+      background: linear-gradient(135deg, #00e676, #00b248);
+      color: #041d0f;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .history-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0;
+      scrollbar-width: none;
+    }
+    .history-strip::-webkit-scrollbar { display: none; }
+    .hist-pill {
+      padding: 5px 11px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--card);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .hist-low { color: #60a5fa; }
+    .hist-mid { color: var(--green); border-color: rgba(0, 230, 118, 0.3); }
+    .hist-high { color: var(--gold); border-color: rgba(255, 202, 40, 0.4); }
+
+    .stage {
+      position: relative;
+      background: radial-gradient(circle at center, #16213a 0%, #0d1322 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      height: 270px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
+    }
+
+    #curve-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .stage-overlay { position: relative; z-index: 2; text-align: center; }
+    .status-label {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    #multiplier-text {
+      font-size: 62px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      text-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
+      transition: color 0.15s;
+    }
+
+    .mult-running { color: #ffffff; }
+    .mult-high { color: var(--gold) !important; text-shadow: 0 0 30px rgba(255, 202, 40, 0.65) !important; }
+    .mult-crashed { color: var(--red) !important; text-shadow: 0 0 30px rgba(255, 59, 92, 0.7) !important; }
+
+    #win-toast { margin-top: 8px; font-size: 14px; font-weight: 800; color: var(--green); min-height: 20px; }
+
+    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 720px) {
+      .controls-grid { grid-template-columns: 1fr; }
+      #multiplier-text { font-size: 52px; }
+    }
+
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .bet-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .input-box { flex: 1; }
+    .input-box label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; font-weight: 700; }
+    .input-box input {
+      width: 100%;
+      padding: 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0b101b;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .quick-bets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+    .q-btn {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .auto-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0e1422;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+
+    .main-action-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+    }
+    .btn-bet { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; }
+    .btn-cancel { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+    .btn-cashout { background: linear-gradient(135deg, #00e676, #00c853); color: #03200f; }
+
+    .table-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      background: #0e1422;
+    }
+    .player-won { border-left: 3px solid var(--green); background: rgba(0, 230, 118, 0.08); }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 14px;
+    }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0b101b;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .cat-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; }
+    .cat-tab {
+      padding: 6px 12px;
+      border-radius: 16px;
+      background: #0e1422;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .methods-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
+    .method-card {
+      background: #0e1422;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .method-badge { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px; margin-bottom: 6px; color: #fff; }
+    .method-name { font-size: 13px; font-weight: 700; color: #fff; }
+    .method-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+    #checkout-step { display: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">X-<span>CRASH</span></div>
+    <div class="header-right">
+      <div class="balance-box">$<span id="balance">0.00</span></div>
+      <button class="btn-dep" onclick="openPayModal()">+ DEPOSIT (55+)</button>
+    </div>
+  </header>
+
+  <div class="wrapper">
+    <div class="history-strip" id="history-strip"></div>
+
+    <div class="stage">
+      <canvas id="curve-canvas"></canvas>
+      <div class="stage-overlay">
+        <div class="status-label" id="round-status">CONNECTING...</div>
+        <div id="multiplier-text" class="mult-running">1.00x</div>
+        <div id="win-toast"></div>
+      </div>
+    </div>
+
+    <div class="controls-grid">
+      <div class="panel">
+        <div class="bet-row">
+          <div class="input-box">
+            <label>Bet Amount ($)</label>
+            <input type="number" id="bet-amount" value="10" min="1" />
+          </div>
+          <div class="input-box">
+            <label>Auto Cashout (x)</label>
+            <input type="number" id="auto-mult" value="2.00" step="0.1" min="1.05" />
+          </div>
+        </div>
+
+        <div class="quick-bets">
+          <button class="q-btn" onclick="setBet(5)">$5</button>
+          <button class="q-btn" onclick="setBet(25)">$25</button>
+          <button class="q-btn" onclick="multBet(0.5)">1/2</button>
+          <button class="q-btn" onclick="multBet(2)">2x</button>
+        </div>
+
+        <div class="auto-row">
+          <span>Enable Auto Cashout</span>
+          <input type="checkbox" id="auto-enable" style="width:18px; height:18px; accent-color:#00e676;" />
+        </div>
+
+        <button class="main-action-btn btn-bet" id="action-btn" onclick="handleAction()">PLACE BET</button>
+      </div>
+
+      <div class="panel">
+        <div class="table-head">
